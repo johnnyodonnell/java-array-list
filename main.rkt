@@ -1,7 +1,4 @@
-#lang racket/base
-
-(module+ test
-  (require rackunit))
+#lang racket
 
 ;; Notice
 ;; To install (from within the package directory):
@@ -25,26 +22,36 @@
 
 ;; Code here
 
+(provide array-list%)
 
 
-(module+ test
-  ;; Any code in this `test` submodule runs when this file is run using DrRacket
-  ;; or with `raco test`. The code here does not run when this file is
-  ;; required by another module.
+;; array-list class that is based on Java's ArrayList
+;; Not a complete implementation yet
 
-  (check-equal? (+ 2 2) 4))
+(define array-list%
+  (class* object%
+          ()
+          (super-new)
+          (init-field [initial-capacity 10])
+          (field (vec (make-vector initial-capacity)))
+          (field (_size 0))
+          (define/public add
+                         (lambda (element)
+                           (begin
+                             (if (>= _size (vector-length vec))
+                               (set-field! vec this
+                                           (build-vector
+                                             (* 2 (vector-length vec))
+                                             (lambda (i)
+                                               (cond
+                                                 [(< i (vector-length vec))
+                                                  (vector-ref vec i)]
+                                                 [else 0]))))
+                               (void))
+                             (vector-set! vec _size element)
+                             (set-field! _size this (add1 _size)))))
+          (define/public get
+                         (lambda (index)
+                           (vector-ref vec index)))
+          (define/public size (lambda () _size))))
 
-(module+ main
-  ;; (Optional) main submodule. Put code here if you need it to be executed when
-  ;; this file is run using DrRacket or the `racket` executable.  The code here
-  ;; does not run when this file is required by another module. Documentation:
-  ;; http://docs.racket-lang.org/guide/Module_Syntax.html#%28part._main-and-test%29
-
-  (require racket/cmdline)
-  (define who (box "world"))
-  (command-line
-    #:program "my-program"
-    #:once-each
-    [("-n" "--name") name "Who to say hello to" (set-box! who name)]
-    #:args ()
-    (printf "hello ~a~n" (unbox who))))
